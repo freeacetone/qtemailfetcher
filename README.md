@@ -1,7 +1,7 @@
 # QtEmailFetcher
 IMAP client and e-mail document parser for C++ Qt5.
 
-Dependensies: libcurl, Qt.
+Dependenсies: libcurl, Qt.
 
 A little example which will fetch all your unreaded messages with short summary:
 
