@@ -5,7 +5,7 @@ Dependenсies: libcurl, Qt.
 
 A little example which will fetch all your unreaded messages with short summary:
 
-```
+```cpp
 #include "qtimapclient.h"
 #include <QDebug>
 #include <QThread>
