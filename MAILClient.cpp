@@ -25,10 +25,10 @@ std::string CMailClient::s_strCurlTraceLogDirectory;
 */
 CMailClient::CMailClient(LogFnCallback Logger) :
    m_oLog(Logger),
-   m_iCurlTimeout(0),
+   m_iCurlTimeout(5),
    m_eSettingsFlags(ALL_FLAGS),
    m_eSslTlsFlags(SslTlsFlag::NO_SSLTLS),
-   m_pCurlSession(nullptr),   
+   m_pCurlSession(nullptr),
    m_pRecipientslist(nullptr),
    m_bProgressCallbackSet(false),
    m_bNoSignal(false),
@@ -46,7 +46,7 @@ CMailClient::~CMailClient()
    {
       if (m_eSettingsFlags & ENABLE_LOG)
          m_oLog(LOG_WARNING_OBJECT_NOT_CLEANED);
-      
+
       CleanupSession();
    }
 }
@@ -80,7 +80,7 @@ bool CMailClient::InitSession(const std::string& strHost, const std::string& str
    {
       if (m_eSettingsFlags & ENABLE_LOG)
          m_oLog(LOG_ERROR_EMPTY_HOST_MSG);
-      
+
       return false;
    }
 
@@ -88,7 +88,7 @@ bool CMailClient::InitSession(const std::string& strHost, const std::string& str
    {
       if (m_eSettingsFlags & ENABLE_LOG)
          m_oLog(LOG_ERROR_CURL_ALREADY_INIT_MSG);
-      
+
       return false;
    }
    m_pCurlSession = curl_easy_init();
@@ -123,7 +123,7 @@ bool CMailClient::CleanupSession()
    {
       if (m_eSettingsFlags & ENABLE_LOG)
          m_oLog(LOG_ERROR_CURL_NOT_INIT_MSG);
-      
+
       return false;
    }
 
@@ -146,7 +146,7 @@ bool CMailClient::CleanupSession()
       * be able to re-use this connection for additional requests or messages
       * (setting CURLOPT_MAIL_FROM and CURLOPT_MAIL_RCPT as required, and calling
       * curl_easy_perform() again. It may not be a good idea to keep the connection
-      * open for a very long time though (more than a few minutes may result in the 
+      * open for a very long time though (more than a few minutes may result in the
       * server timing out the connection) and you do want to clean up in the end.
       */
       m_pRecipientslist = nullptr;
@@ -308,6 +308,9 @@ bool CMailClient::Perform()
       curl_easy_setopt(m_pCurlSession, CURLOPT_NOSIGNAL, 1L);
    }
 
+   curl_easy_setopt(m_pCurlSession, CURLOPT_SSL_VERIFYPEER, 0L);
+   curl_easy_setopt(m_pCurlSession, CURLOPT_SSL_VERIFYHOST, 0L);
+
 #ifdef DEBUG_CURL
    StartCurlDebug();
 #endif
@@ -348,7 +351,7 @@ bool CMailClient::Perform()
 std::string CMailClient::StringFormat(const std::string strFormat, ...)
 {
    int n = (static_cast<int>(strFormat.size())) * 2; // Reserve two times as much as the length of the strFormat
-   
+
    std::unique_ptr<char[]> pFormatted;
 
    va_list ap;
@@ -357,11 +360,11 @@ std::string CMailClient::StringFormat(const std::string strFormat, ...)
    {
       pFormatted.reset(new char[n]); // Wrap the plain char array into the unique_ptr
       strcpy(&pFormatted[0], strFormat.c_str());
-      
+
       va_start(ap, strFormat);
       int iFinaln = vsnprintf(&pFormatted[0], n, strFormat.c_str(), ap);
       va_end(ap);
-      
+
       if (iFinaln < 0 || iFinaln >= n)
       {
          n += abs(iFinaln - n + 1);

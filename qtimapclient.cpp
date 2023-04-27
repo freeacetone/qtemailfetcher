@@ -8,6 +8,7 @@
 
 #include <QDebug>
 #include <QRegularExpression>
+#include <QDebug>
 
 QtImapClient::QtImapClient() : m_imapClient ([this](const std::string& strLogMsg) {
         qWarning() << "QtImapClient backend:" << strLogMsg.c_str();
@@ -31,7 +32,6 @@ bool QtImapClient::checkUnseen(QList<unsigned int> &result)
     std::string out;
 
     bool status = m_imapClient.Search(out, CIMAPClient::SearchOption::UNSEEN);
-
     if (not status)
     {
         m_errorString = "Fetch unseen messages failed";
@@ -49,7 +49,12 @@ bool QtImapClient::checkUnseen(QList<unsigned int> &result)
     QStringListIterator iter(strList);
     while (iter.hasNext())
     {
-        result.push_back(iter.next().toUInt());
+        bool ok = false;
+        auto val = iter.next().toUInt(&ok);
+        if (ok)
+        {
+            result.push_back(val);
+        }
     }
     return true;
 }
